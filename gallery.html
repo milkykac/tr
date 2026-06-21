@@ -759,6 +759,7 @@
     .gallery.visible {
       opacity: 1;
       max-height: none;
+      overflow: visible;
     }
 
     .gallery-item {
@@ -1509,7 +1510,7 @@
                   photos.splice(idx, 1);
                   removePhotoFromDOM(deletedId);
                   if (!photos.length) {
-                    showEmptyState();
+                    setTimeout(showEmptyState, 420);
                   }
                 }
               }
@@ -1738,7 +1739,7 @@
           item.appendChild(delBtn);
         }
 
-        item.addEventListener('click', () => openLightbox(parseInt(item.dataset.index)));
+        item.addEventListener('click', () => openLightbox(parseInt(item.dataset.index, 10)));
 
         gallery.appendChild(item);
       }
@@ -1764,6 +1765,15 @@
         if (dbError) {
           showToast('Delete failed');
           return;
+        }
+
+        const idx = photos.findIndex(p => p.id === photoId);
+        if (idx !== -1) {
+          photos.splice(idx, 1);
+          removePhotoFromDOM(photoId);
+          if (!photos.length) {
+            setTimeout(showEmptyState, 420);
+          }
         }
       }
 
@@ -2195,16 +2205,7 @@
       }
 
       mascotCat.addEventListener('click', () => speakMascot(mascotCat, 'miau!', true));
-      mascotCat.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        speakMascot(mascotCat, 'miau!', true);
-      });
-
       mascotDog.addEventListener('click', () => speakMascot(mascotDog, 'haf!', true));
-      mascotDog.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        speakMascot(mascotDog, 'haf!', true);
-      });
 
       /* ---- Re-observe on new photos (mutation observer) ---- */
       const galleryObserver = new MutationObserver(() => {
