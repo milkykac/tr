@@ -1437,8 +1437,8 @@
           await loadPhotos();
           subscribeRealtime();
         } else {
-          galleryId = storedOwnerId || OWNER_GALLERY_ID;
-          localStorage.setItem('our_moments_owner_id', galleryId);
+          galleryId = OWNER_GALLERY_ID;
+          localStorage.setItem('our_moments_owner_id', OWNER_GALLERY_ID);
           isOwner = true;
           await loadPhotos();
           subscribeRealtime();
@@ -1998,7 +1998,7 @@
         }
         const url = new URL(window.location.href);
         url.search = '';
-        url.searchParams.set('gallery', galleryId);
+        url.searchParams.set('gallery', OWNER_GALLERY_ID);
         const shareUrl = url.toString();
         shareLink.value = shareUrl;
         shareModal.classList.add('active');
