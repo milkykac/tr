@@ -1291,6 +1291,14 @@
               continue;
             }
 
+            photos.push(dbData);
+            const idx = photos.length - 1;
+            appendPhoto(dbData, idx);
+            emptyState.classList.add('hidden');
+            if (!gallery.classList.contains('visible')) {
+              gallery.classList.add('visible');
+            }
+            requestAnimationFrame(() => observeItems());
             added++;
           } catch (err) {
             showToast('Error processing image');
