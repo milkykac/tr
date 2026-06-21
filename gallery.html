@@ -1415,6 +1415,7 @@
       let isOwner = false;
       let galleryId = null;
       let realtimeChannel = null;
+      let uploadingIds = new Set();
 
       function getUrlGalleryId() {
         const params = new URLSearchParams(window.location.search);
@@ -1480,7 +1481,7 @@
             (payload) => {
               if (payload.eventType === 'INSERT') {
                 const newPhoto = payload.new;
-                if (!photos.find(p => p.id === newPhoto.id)) {
+                if (!document.querySelector(`[data-photo-id="${newPhoto.id}"]`)) {
                   photos.push(newPhoto);
                   appendPhoto(newPhoto, photos.length - 1);
                   emptyState.classList.add('hidden');
@@ -1489,6 +1490,7 @@
                   }
                   observeItems();
                 }
+                uploadingIds.delete(newPhoto.id);
               } else if (payload.eventType === 'UPDATE') {
                 const updated = payload.new;
                 const idx = photos.findIndex(p => p.id === updated.id);
@@ -1675,9 +1677,13 @@
               continue;
             }
 
-            photos.push(dbData);
-            const idx = photos.length - 1;
-            appendPhoto(dbData, idx);
+            uploadingIds.add(dbData.id);
+            if (!document.querySelector(`[data-photo-id="${dbData.id}"]`)) {
+              photos.push(dbData);
+              const idx = photos.length - 1;
+              appendPhoto(dbData, idx);
+              observeItems();
+            }
             emptyState.classList.add('hidden');
             if (!gallery.classList.contains('visible')) {
               gallery.classList.add('visible');
@@ -1744,6 +1750,16 @@
       /* ---- Delete ---- */
       async function deletePhoto(photoId, photoUrl) {
         if (!isOwner) return;
+        const storagePath = photoUrl.split(`/${STORAGE_BUCKET}/`)[1];
+        if (storagePath) {
+          const { error: storageError } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .remove([storagePath]);
+          if (storageError) {
+            console.error('Storage delete error:', storageError);
+          }
+        }
+
         const { error: dbError } = await supabase
           .from('photos')
           .delete()
@@ -1752,13 +1768,6 @@
         if (dbError) {
           showToast('Delete failed');
           return;
-        }
-
-        const storagePath = photoUrl.split('/photos/')[1];
-        if (storagePath) {
-          await supabase.storage
-            .from(STORAGE_BUCKET)
-            .remove([decodeURIComponent(storagePath)]);
         }
       }
 
