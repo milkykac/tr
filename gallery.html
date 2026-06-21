@@ -1439,7 +1439,7 @@
           galleryId = storedOwnerId || crypto.randomUUID();
           localStorage.setItem('our_moments_owner_id', galleryId);
           isOwner = true;
-          showEmptyState();
+          await loadPhotos();
           subscribeRealtime();
         }
       }
@@ -1686,7 +1686,9 @@
             }
             emptyState.classList.add('hidden');
             gallery.classList.add('visible');
-            void gallery.offsetHeight;
+            gallery.style.opacity = '1';
+            gallery.style.maxHeight = 'none';
+            gallery.style.overflow = 'visible';
             added++;
           } catch (err) {
             showToast('Error processing image');
@@ -1700,6 +1702,10 @@
       function appendPhoto(photo, index, immediate) {
         const item = document.createElement('div');
         item.className = `gallery-item${immediate ? ' reveal' : ''}`;
+        if (immediate) {
+          item.style.opacity = '1';
+          item.style.transform = 'translateY(0)';
+        }
         item.dataset.index = index;
         item.dataset.photoId = photo.id;
 
