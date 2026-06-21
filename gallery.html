@@ -1379,6 +1379,7 @@
       const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
       const STORAGE_BUCKET = 'photos'
+      const OWNER_GALLERY_ID = 'our-moments-gallery'
 
       const uploadArea = document.getElementById('uploadArea');
       const fileInput = document.getElementById('fileInput');
@@ -1429,14 +1430,14 @@
 
         if (urlId) {
           galleryId = urlId;
-          isOwner = storedOwnerId === urlId;
+          isOwner = storedOwnerId === urlId || urlId === OWNER_GALLERY_ID;
           if (!isOwner) {
             uploadArea.style.display = 'none';
           }
           await loadPhotos();
           subscribeRealtime();
         } else {
-          galleryId = storedOwnerId || crypto.randomUUID();
+          galleryId = storedOwnerId || OWNER_GALLERY_ID;
           localStorage.setItem('our_moments_owner_id', galleryId);
           isOwner = true;
           await loadPhotos();
