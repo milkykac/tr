@@ -1,0 +1,2 @@
+# galery
+My clone repository
