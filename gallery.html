@@ -1421,7 +1421,8 @@
 
       function getUrlGalleryId() {
         const params = new URLSearchParams(window.location.search);
-        return params.get('gallery') || null;
+        const val = params.get('gallery');
+        return val ? val : null;
       }
 
       async function init() {
