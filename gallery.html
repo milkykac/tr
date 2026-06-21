@@ -1431,16 +1431,21 @@
         if (urlId) {
           galleryId = urlId;
           isOwner = storedOwnerId === urlId || urlId === OWNER_GALLERY_ID;
+          if (isOwner && !storedOwnerId) {
+            localStorage.setItem('our_moments_owner_id', urlId);
+          }
           if (!isOwner) {
             uploadArea.style.display = 'none';
           }
           await loadPhotos();
+          loadTogetherSinceUrl();
           subscribeRealtime();
         } else {
           galleryId = OWNER_GALLERY_ID;
           localStorage.setItem('our_moments_owner_id', OWNER_GALLERY_ID);
           isOwner = true;
           await loadPhotos();
+          loadTogetherSinceUrl();
           subscribeRealtime();
         }
       }
@@ -1999,6 +2004,9 @@
         const url = new URL(window.location.href);
         url.search = '';
         url.searchParams.set('gallery', OWNER_GALLERY_ID);
+        if (togetherSince) {
+          url.searchParams.set('since', togetherSince);
+        }
         const shareUrl = url.toString();
         shareLink.value = shareUrl;
         shareModal.classList.add('active');
@@ -2075,7 +2083,28 @@
 
       /* ---- Together Counter ---- */
       const TOGETHER_KEY = 'our_moments_together';
-      let togetherSince = localStorage.getItem(TOGETHER_KEY);
+      let togetherSince = null;
+
+      function loadTogetherSinceUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const urlSince = params.get('since');
+        const localSince = localStorage.getItem(TOGETHER_KEY);
+        togetherSince = urlSince || localSince || null;
+        if (urlSince && urlSince !== localSince && isOwner) {
+          localStorage.setItem(TOGETHER_KEY, urlSince);
+        }
+        updateTogetherCounter();
+      }
+
+      function updateTogetherUrl(dateStr) {
+        const url = new URL(window.location.href);
+        if (dateStr) {
+          url.searchParams.set('since', dateStr);
+        } else {
+          url.searchParams.delete('since');
+        }
+        window.history.replaceState({}, '', url);
+      }
 
       function updateTogetherCounter() {
         if (!togetherSince) {
@@ -2115,12 +2144,11 @@
         if (val) {
           togetherSince = val;
           localStorage.setItem(TOGETHER_KEY, val);
+          updateTogetherUrl(val);
           updateTogetherCounter();
         }
         togetherPopup.classList.remove('active');
       });
-
-      updateTogetherCounter();
 
       /* ---- Romantic Quotes ---- */
       const quotes = [
