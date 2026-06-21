@@ -1681,14 +1681,10 @@
             if (!document.querySelector(`[data-photo-id="${dbData.id}"]`)) {
               photos.push(dbData);
               const idx = photos.length - 1;
-              appendPhoto(dbData, idx);
-              observeItems();
+              appendPhoto(dbData, idx, true);
             }
             emptyState.classList.add('hidden');
-            if (!gallery.classList.contains('visible')) {
-              gallery.classList.add('visible');
-            }
-            requestAnimationFrame(() => observeItems());
+            gallery.classList.add('visible');
             added++;
           } catch (err) {
             showToast('Error processing image');
@@ -1699,9 +1695,9 @@
         }
       }
 
-      function appendPhoto(photo, index) {
+      function appendPhoto(photo, index, immediate) {
         const item = document.createElement('div');
-        item.className = 'gallery-item';
+        item.className = `gallery-item${immediate ? ' reveal' : ''}`;
         item.dataset.index = index;
         item.dataset.photoId = photo.id;
 
