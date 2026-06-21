@@ -1686,6 +1686,7 @@
             }
             emptyState.classList.add('hidden');
             gallery.classList.add('visible');
+            void gallery.offsetHeight;
             added++;
           } catch (err) {
             showToast('Error processing image');
@@ -1710,7 +1711,7 @@
 
         const img = document.createElement('img');
         img.src = photo.url;
-        img.loading = 'lazy';
+        img.loading = immediate ? 'eager' : 'lazy';
         img.alt = '';
 
         const heart = document.createElement('span');
