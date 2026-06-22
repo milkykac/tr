@@ -1378,7 +1378,11 @@
       const { createClient } = window.supabase
       const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-      const STORAGE_BUCKET = 'photos'
+      // Cloudinary config
+      const CLOUD_NAME = 'dftxlmid6'
+      const CLOUDINARY_UPLOAD_PRESET = 'our_moments'
+      const CLOUDINARY_FOLDER = 'our-moments'
+
       const OWNER_GALLERY_ID = 'our-moments-gallery'
 
       const uploadArea = document.getElementById('uploadArea');
@@ -1646,25 +1650,22 @@
         for (const file of fileArray) {
           try {
             const compressedBlob = await compressImage(file);
-            const timestamp = Date.now();
-            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-            const storagePath = `galleries/${galleryId}/${timestamp}_${safeName}`;
+            const formData = new FormData();
+            formData.append('file', compressedBlob, file.name);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            formData.append('folder', CLOUDINARY_FOLDER);
 
-            const { error: uploadError } = await supabase.storage
-              .from(STORAGE_BUCKET)
-              .upload(storagePath, compressedBlob, {
-                contentType: 'image/jpeg',
-                cacheControl: '3600'
-              });
+            const uploadResult = await fetch(
+              `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+              { method: 'POST', body: formData }
+            ).then(r => r.json());
 
-            if (uploadError) {
-              showToast('Upload failed: ' + uploadError.message);
+            if (uploadResult.error) {
+              showToast('Upload failed: ' + uploadResult.error.message);
               continue;
             }
 
-            const { data: { publicUrl } } = supabase.storage
-              .from(STORAGE_BUCKET)
-              .getPublicUrl(storagePath);
+            const publicUrl = uploadResult.secure_url;
 
             const nextIndex = photos.length;
             const { data: dbData, error: dbError } = await supabase
@@ -1761,15 +1762,15 @@
       /* ---- Delete ---- */
       async function deletePhoto(photoId, photoUrl) {
         if (!isOwner) return;
-        const storagePath = photoUrl.split(`/${STORAGE_BUCKET}/`)[1];
-        if (storagePath) {
-          const { error: storageError } = await supabase.storage
-            .from(STORAGE_BUCKET)
-            .remove([storagePath]);
-          if (storageError) {
-            console.error('Storage delete error:', storageError);
+
+        // Try Supabase Storage delete (legacy photos)
+        if (photoUrl && photoUrl.includes('/photos/')) {
+          const storagePath = photoUrl.split('/photos/')[1];
+          if (storagePath) {
+            await supabase.storage.from('photos').remove([storagePath]);
           }
         }
+        // Cloudinary photos: DB delete only (cleanup via dashboard if needed)
 
         const { error: dbError } = await supabase
           .from('photos')
